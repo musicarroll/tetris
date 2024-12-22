@@ -1,6 +1,6 @@
 import pygame
 import random
-
+# This is Chris's tetris game.
 pygame.init()
 
 # Constants
