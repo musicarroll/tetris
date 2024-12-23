@@ -94,7 +94,6 @@ def check_collision(grid, shape, x, y):
 def check_game_over(grid):
     return any(grid[0][x][0] for x in range(GRID_WIDTH))
 
-# Main game loop
 def main():
     # Initialize the grid with black color
     grid = [[(0, BLACK) for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
@@ -109,6 +108,17 @@ def main():
 
     game_over = False
 
+        # Timing variables
+    normal_tick_rate = 500  # milliseconds for regular descent
+    fast_tick_rate = 100    # milliseconds for faster descent
+    last_tick = pygame.time.get_ticks()
+
+    horizontal_move_delay = 150  # milliseconds delay for horizontal movement
+    last_horizontal_move = pygame.time.get_ticks()
+
+    rotation_delay = 200  # milliseconds delay for rotation
+    last_rotation_time = pygame.time.get_ticks()
+
     while not game_over:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -116,35 +126,42 @@ def main():
                 quit()
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and shape_x > 0 and not check_collision(grid, current_shape, shape_x - 1, shape_y):
-            shape_x -= 1
-        if keys[pygame.K_RIGHT] and shape_x + len(current_shape[0]) < GRID_WIDTH and not check_collision(grid, current_shape, shape_x + 1, shape_y):
-            shape_x += 1
-        if keys[pygame.K_UP]:
-            # Rotate the shape
+
+        # Handle horizontal movement with delay
+        current_time = pygame.time.get_ticks()
+        if current_time - last_horizontal_move > horizontal_move_delay:
+            if keys[pygame.K_LEFT] and shape_x > 0 and not check_collision(grid, current_shape, shape_x - 1, shape_y):
+                shape_x -= 1
+                last_horizontal_move = current_time
+            if keys[pygame.K_RIGHT] and shape_x + len(current_shape[0]) < GRID_WIDTH and not check_collision(grid, current_shape, shape_x + 1, shape_y):
+                shape_x += 1
+                last_horizontal_move = current_time
+
+        # Handle rotation with delay
+        if keys[pygame.K_UP] and current_time - last_rotation_time > rotation_delay:
             rotated_shape = rotate_shape(current_shape)
-            # Check if the rotated shape fits within the grid and does not collide
             if shape_x + len(rotated_shape[0]) <= GRID_WIDTH and shape_y + len(rotated_shape) <= GRID_HEIGHT \
                     and not check_collision(grid, rotated_shape, shape_x, shape_y):
                 current_shape = rotated_shape
+                last_rotation_time = current_time
 
-        # Move shape down
-        if not check_collision(grid, current_shape, shape_x, shape_y + 1):
-            shape_y += 1
-        else:
-            # Place the shape on the grid when it can't move down anymore
-            place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
-            
-            # Check for game over
-            if check_game_over(grid):
-                game_over = True
+        # Determine the descent rate
+        current_tick_rate = fast_tick_rate if keys[pygame.K_DOWN] else normal_tick_rate
+
+        # Handle automatic downward movement
+        if current_time - last_tick > current_tick_rate:
+            if not check_collision(grid, current_shape, shape_x, shape_y + 1):
+                shape_y += 1
             else:
-                # Reset shape position
-                shape_y = 0
-                shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
-                # Select a new random shape and color
-                current_shape = random.choice(SHAPES)
-                current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
+                place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
+                if check_game_over(grid):
+                    game_over = True
+                else:
+                    shape_y = 0
+                    shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
+                    current_shape = random.choice(SHAPES)
+                    current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
+            last_tick = current_time
 
         screen.fill(BLACK)
         draw_grid(grid)
@@ -156,15 +173,13 @@ def main():
                     draw_block(shape_x + x, shape_y + y, current_color)
 
         pygame.display.flip()
-        clock.tick(5)
+        clock.tick(30)
 
     # Display "Game Over" message
     font = pygame.font.Font(None, 36)
     game_over_text = font.render("Game Over", True, WHITE)
     screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 18))
     pygame.display.flip()
-
-    # Wait for a moment before quitting
     pygame.time.wait(2000)
 
 if __name__ == "__main__":
