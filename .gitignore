@@ -1,1 +1,7 @@
-# Nothing to ignore just yet
+__pycache__/
+*.old
+*.pyc
+*.pyo
+*.pyd
+*.json
+*.svg
