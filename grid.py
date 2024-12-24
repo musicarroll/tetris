@@ -16,9 +16,13 @@ def draw_grid(screen, grid, block_size):
                 pygame.draw.rect(screen, color, (x * block_size, y * block_size, block_size, block_size))
 
 def place_shape_on_grid(grid, shape, x, y, color):
+    """
+    Place a shape on the grid at the specified position (x, y).
+    Handles boundary conditions to avoid out-of-bounds errors.
+    """
     for dy, row in enumerate(shape):
         for dx, value in enumerate(row):
-            if value:
+            if value and 0 <= y + dy < len(grid) and 0 <= x + dx < len(grid[0]):
                 grid[y + dy][x + dx] = (1, color)
 
 def clear_full_rows(grid):

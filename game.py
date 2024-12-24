@@ -1,15 +1,19 @@
 import pygame
 import random
-from constants import GRID_WIDTH, GRID_HEIGHT, SHAPES, WHITE, RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE, BLACK
+from constants import GRID_WIDTH, GRID_HEIGHT, BLOCK_SIZE, SHAPES, WHITE, RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE, BLACK
 from grid import initialize_grid, draw_grid, place_shape_on_grid, clear_full_rows
-from utils import rotate_shape, check_collision, check_game_over, draw_block  # Import draw_block
+from utils import rotate_shape, draw_button, check_collision, check_game_over, draw_block  # Import draw_block
 
 # def main():
+#     global GRID_WIDTH, GRID_HEIGHT  # Declare global to modify these variables
 #     pygame.init()
-#     screen = pygame.display.set_mode((GRID_WIDTH * 25, GRID_HEIGHT * 25))
+#     screen = pygame.display.set_mode((GRID_WIDTH * BLOCK_SIZE, GRID_HEIGHT * BLOCK_SIZE), pygame.RESIZABLE)
 #     pygame.display.set_caption("Tetris")
 #     clock = pygame.time.Clock()
 
+#     font = pygame.font.Font(None, 36)
+
+#     # Initialize grid and game variables
 #     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
 #     current_shape = random.choice(SHAPES)
 #     current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
@@ -26,8 +30,16 @@ from utils import rotate_shape, check_collision, check_game_over, draw_block  # 
 #     rotation_delay = 200  # milliseconds delay for rotation
 #     last_rotation_time = pygame.time.get_ticks()
 
-#     game_over = False
-#     while not game_over:
+#     game_running = False  # Game is initially not running
+#     game_paused = False   # Game is initially not paused
+
+#     start_button_rect = (50, 10, 100, 50)  # Position and size for Start button
+#     pause_button_rect = (200, 10, 150, 50)  # Position and size for Pause/Continue button
+
+#     # Store the current window dimensions
+#     window_width, window_height = GRID_WIDTH * BLOCK_SIZE, GRID_HEIGHT * BLOCK_SIZE
+
+#     while True:
 #         current_time = pygame.time.get_ticks()
 
 #         for event in pygame.event.get():
@@ -35,67 +47,103 @@ from utils import rotate_shape, check_collision, check_game_over, draw_block  # 
 #                 pygame.quit()
 #                 quit()
 
-#         keys = pygame.key.get_pressed()
+#             # Handle window resize events
+#             if event.type == pygame.VIDEORESIZE:
+#                 window_width, window_height = event.w, event.h
+#                 screen = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE)
 
-#         # Handle horizontal movement with delay
-#         if current_time - last_horizontal_move > horizontal_move_delay:
-#             if keys[pygame.K_LEFT] and not check_collision(grid, current_shape, shape_x - 1, shape_y):
-#                 shape_x -= 1
-#                 last_horizontal_move = current_time
-#             if keys[pygame.K_RIGHT] and not check_collision(grid, current_shape, shape_x + 1, shape_y):
-#                 shape_x += 1
-#                 last_horizontal_move = current_time
+#                 # Update grid dimensions dynamically
+#                 GRID_WIDTH = window_width // BLOCK_SIZE
+#                 GRID_HEIGHT = window_height // BLOCK_SIZE
+#                 grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
 
-#         # Handle rotation with delay
-#         if keys[pygame.K_UP] and current_time - last_rotation_time > rotation_delay:
-#             rotated = rotate_shape(current_shape)
-#             if not check_collision(grid, rotated, shape_x, shape_y):
-#                 current_shape = rotated
-#                 last_rotation_time = current_time
+#             # Handle mouse clicks for buttons
+#             if event.type == pygame.MOUSEBUTTONDOWN:
+#                 mouse_x, mouse_y = event.pos
+#                 if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
+#                    start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
+#                     game_running = True
+#                 if pause_button_rect[0] <= mouse_x <= pause_button_rect[0] + pause_button_rect[2] and \
+#                    pause_button_rect[1] <= mouse_y <= pause_button_rect[1] + pause_button_rect[3] and game_running:
+#                     game_paused = not game_paused
 
-#         # Determine descent rate based on whether the down arrow is pressed
-#         current_tick_rate = fast_tick_rate if keys[pygame.K_DOWN] else normal_tick_rate
+#         if game_running and not game_paused:
+#             # Game logic when running and not paused
+#             keys = pygame.key.get_pressed()
 
-#         # Handle automatic downward movement
-#         if current_time - last_tick > current_tick_rate:
-#             if not check_collision(grid, current_shape, shape_x, shape_y + 1):
-#                 shape_y += 1
-#             else:
-#                 place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
-#                 if check_game_over(grid):
-#                     game_over = True
+#             # Handle horizontal movement with delay
+#             if current_time - last_horizontal_move > horizontal_move_delay:
+#                 if keys[pygame.K_LEFT] and not check_collision(grid, current_shape, shape_x - 1, shape_y):
+#                     shape_x -= 1
+#                     last_horizontal_move = current_time
+#                 if keys[pygame.K_RIGHT] and not check_collision(grid, current_shape, shape_x + 1, shape_y):
+#                     shape_x += 1
+#                     last_horizontal_move = current_time
+
+#             # Handle rotation with delay
+#             if keys[pygame.K_UP] and current_time - last_rotation_time > rotation_delay:
+#                 rotated = rotate_shape(current_shape)
+#                 if not check_collision(grid, rotated, shape_x, shape_y):
+#                     current_shape = rotated
+#                     last_rotation_time = current_time
+
+#             # Determine descent rate based on whether the down arrow is pressed
+#             current_tick_rate = fast_tick_rate if keys[pygame.K_DOWN] else normal_tick_rate
+
+#             # Handle automatic downward movement
+#             if current_time - last_tick > current_tick_rate:
+#                 if not check_collision(grid, current_shape, shape_x, shape_y + 1):
+#                     shape_y += 1
 #                 else:
-#                     shape_y = 0
-#                     shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
-#                     current_shape = random.choice(SHAPES)
-#                     current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
-#             last_tick = current_time
+#                     place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
+                    
+#                     # Check for and clear full rows
+#                     cleared_rows = clear_full_rows(grid)
+#                     if cleared_rows > 0:
+#                         print(f"Cleared {cleared_rows} row(s)!")
 
+#                     # Check for game over condition
+#                     if check_game_over(grid):
+#                         game_running = False
+#                     else:
+#                         # Spawn a new shape
+#                         shape_y = 0
+#                         shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
+#                         current_shape = random.choice(SHAPES)
+#                         current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
+#                 last_tick = current_time
+
+#         # Draw everything
 #         screen.fill(BLACK)
-#         draw_grid(screen, grid, 25)
 
-#         # Draw current shape
-#         for y, row in enumerate(current_shape):
-#             for x, value in enumerate(row):
-#                 if value:
-#                     draw_block(screen, shape_x + x, shape_y + y, current_color)
+#         # Draw buttons
+#         draw_button(screen, "Start", start_button_rect, font, WHITE, RED)
+#         draw_button(screen, "Pause" if game_running and not game_paused else "Continue",
+#                     pause_button_rect, font, WHITE, BLUE)
+
+#         # Draw grid and blocks only if the game is running
+#         if game_running:
+#             draw_grid(screen, grid, BLOCK_SIZE)
+#             for y, row in enumerate(current_shape):
+#                 for x, value in enumerate(row):
+#                     if value:
+#                         draw_block(screen, shape_x + x, shape_y + y, current_color)
 
 #         pygame.display.flip()
 #         clock.tick(30)
 
-#     # Display "Game Over" message
-#     font = pygame.font.Font(None, 36)
-#     game_over_text = font.render("Game Over", True, WHITE)
-#     screen.blit(game_over_text, (GRID_WIDTH * 25 // 2 - 50, GRID_HEIGHT * 25 // 2))
-#     pygame.display.flip()
-#     pygame.time.wait(2000)
 
 def main():
+    global GRID_WIDTH, GRID_HEIGHT, BLOCK_SIZE  # Allow global modification of these variables
     pygame.init()
-    screen = pygame.display.set_mode((GRID_WIDTH * 25, GRID_HEIGHT * 25))
+    screen = pygame.display.set_mode((GRID_WIDTH * BLOCK_SIZE, GRID_HEIGHT * BLOCK_SIZE), pygame.RESIZABLE)
     pygame.display.set_caption("Tetris")
     clock = pygame.time.Clock()
 
+    font = pygame.font.Font(None, 36)
+
+    # Initialize grid and game variables
+    BLOCK_SIZE = min(screen.get_width() // GRID_WIDTH, screen.get_height() // GRID_HEIGHT)
     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
     current_shape = random.choice(SHAPES)
     current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
@@ -112,8 +160,13 @@ def main():
     rotation_delay = 200  # milliseconds delay for rotation
     last_rotation_time = pygame.time.get_ticks()
 
-    game_over = False
-    while not game_over:
+    game_running = False  # Game is initially not running
+    game_paused = False   # Game is initially not paused
+
+    start_button_rect = (50, 10, 100, 50)  # Position and size for Start button
+    pause_button_rect = (200, 10, 150, 50)  # Position and size for Pause/Continue button
+
+    while True:
         current_time = pygame.time.get_ticks()
 
         for event in pygame.event.get():
@@ -121,68 +174,94 @@ def main():
                 pygame.quit()
                 quit()
 
-        keys = pygame.key.get_pressed()
+            # Handle window resize events
+            if event.type == pygame.VIDEORESIZE:
+                window_width, window_height = event.w, event.h
+                screen = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE)
 
-        # Handle horizontal movement with delay
-        if current_time - last_horizontal_move > horizontal_move_delay:
-            if keys[pygame.K_LEFT] and not check_collision(grid, current_shape, shape_x - 1, shape_y):
-                shape_x -= 1
-                last_horizontal_move = current_time
-            if keys[pygame.K_RIGHT] and not check_collision(grid, current_shape, shape_x + 1, shape_y):
-                shape_x += 1
-                last_horizontal_move = current_time
+                # Dynamically update BLOCK_SIZE to maintain constant grid dimensions
+                new_block_size = min(window_width // GRID_WIDTH, window_height // GRID_HEIGHT)
+                scaling_factor = new_block_size / BLOCK_SIZE
+                BLOCK_SIZE = new_block_size
 
-        # Handle rotation with delay
-        if keys[pygame.K_UP] and current_time - last_rotation_time > rotation_delay:
-            rotated = rotate_shape(current_shape)
-            if not check_collision(grid, rotated, shape_x, shape_y):
-                current_shape = rotated
-                last_rotation_time = current_time
+                # Reinitialize the grid with the updated BLOCK_SIZE
+                grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
 
-        # Determine descent rate based on whether the down arrow is pressed
-        current_tick_rate = fast_tick_rate if keys[pygame.K_DOWN] else normal_tick_rate
+                # Scale and validate current shape position
+                shape_x = max(0, min(GRID_WIDTH - len(current_shape[0]), int(shape_x * scaling_factor)))
+                shape_y = max(0, min(GRID_HEIGHT - len(current_shape), int(shape_y * scaling_factor)))
 
-        # Handle automatic downward movement
-        if current_time - last_tick > current_tick_rate:
-            if not check_collision(grid, current_shape, shape_x, shape_y + 1):
-                shape_y += 1
-            else:
-                # Place shape on grid when it can't move further down
-                place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
-                
-                # Check for and clear full rows
-                cleared_rows = clear_full_rows(grid)
-                if cleared_rows > 0:
-                    print(f"Cleared {cleared_rows} row(s)!")
+            # Handle mouse clicks for buttons
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = event.pos
+                if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
+                   start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
+                    game_running = True
+                if pause_button_rect[0] <= mouse_x <= pause_button_rect[0] + pause_button_rect[2] and \
+                   pause_button_rect[1] <= mouse_y <= pause_button_rect[1] + pause_button_rect[3] and game_running:
+                    game_paused = not game_paused
 
-                # Check for game over condition
-                if check_game_over(grid):
-                    game_over = True
+        if game_running and not game_paused:
+            # Game logic when running and not paused
+            keys = pygame.key.get_pressed()
+
+            # Handle horizontal movement with delay
+            if current_time - last_horizontal_move > horizontal_move_delay:
+                if keys[pygame.K_LEFT] and not check_collision(grid, current_shape, shape_x - 1, shape_y):
+                    shape_x -= 1
+                    last_horizontal_move = current_time
+                if keys[pygame.K_RIGHT] and not check_collision(grid, current_shape, shape_x + 1, shape_y):
+                    shape_x += 1
+                    last_horizontal_move = current_time
+
+            # Handle rotation with delay
+            if keys[pygame.K_UP] and current_time - last_rotation_time > rotation_delay:
+                rotated = rotate_shape(current_shape)
+                if not check_collision(grid, rotated, shape_x, shape_y):
+                    current_shape = rotated
+                    last_rotation_time = current_time
+
+            # Determine descent rate based on whether the down arrow is pressed
+            current_tick_rate = fast_tick_rate if keys[pygame.K_DOWN] else normal_tick_rate
+
+            # Handle automatic downward movement
+            if current_time - last_tick > current_tick_rate:
+                if not check_collision(grid, current_shape, shape_x, shape_y + 1):
+                    shape_y += 1
                 else:
-                    # Spawn a new shape
-                    shape_y = 0
-                    shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
-                    current_shape = random.choice(SHAPES)
-                    current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
-            last_tick = current_time
+                    place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
+                    
+                    # Check for and clear full rows
+                    cleared_rows = clear_full_rows(grid)
+                    if cleared_rows > 0:
+                        print(f"Cleared {cleared_rows} row(s)!")
 
-        # Clear the screen
+                    # Check for game over condition
+                    if check_game_over(grid):
+                        game_running = False
+                    else:
+                        # Spawn a new shape
+                        shape_y = 0
+                        shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
+                        current_shape = random.choice(SHAPES)
+                        current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
+                last_tick = current_time
+
+        # Draw everything
         screen.fill(BLACK)
 
-        # Draw the grid and the current shape
-        draw_grid(screen, grid, 25)
-        for y, row in enumerate(current_shape):
-            for x, value in enumerate(row):
-                if value:
-                    draw_block(screen, shape_x + x, shape_y + y, current_color)
+        # Draw buttons
+        draw_button(screen, "Start", start_button_rect, font, WHITE, RED)
+        draw_button(screen, "Pause" if game_running and not game_paused else "Continue",
+                    pause_button_rect, font, WHITE, BLUE)
 
-        # Update the display
+        # Draw grid and blocks only if the game is running
+        if game_running:
+            draw_grid(screen, grid, BLOCK_SIZE)
+            for y, row in enumerate(current_shape):
+                for x, value in enumerate(row):
+                    if value:
+                        draw_block(screen, shape_x + x, shape_y + y, current_color, BLOCK_SIZE)
+
         pygame.display.flip()
         clock.tick(30)
-
-    # Display "Game Over" message
-    font = pygame.font.Font(None, 36)
-    game_over_text = font.render("Game Over", True, WHITE)
-    screen.blit(game_over_text, (GRID_WIDTH * 25 // 2 - 50, GRID_HEIGHT * 25 // 2))
-    pygame.display.flip()
-    pygame.time.wait(2000)
