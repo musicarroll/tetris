@@ -1,7 +1,10 @@
 import pygame
 import random
-# This is Chris's tetris game.
-# This is Chris making a few changes
+# This is the original, single file version of the game.
+# It is now obsolete.
+# It has been refactored into several modules that are imported into main.py.
+# So, to launch the game, enter the command python main.py
+
 pygame.init()
 
 # Constants
