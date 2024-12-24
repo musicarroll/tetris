@@ -20,3 +20,17 @@ def place_shape_on_grid(grid, shape, x, y, color):
         for dx, value in enumerate(row):
             if value:
                 grid[y + dy][x + dx] = (1, color)
+
+def clear_full_rows(grid):
+    """
+    Check for and clear full rows in the grid.
+    Rows that are fully covered by blocks are removed, 
+    and rows above are shifted downward. Empty rows are added at the top.
+    """
+    full_rows = [y for y, row in enumerate(grid) if all(cell[0] for cell in row)]
+    for row in full_rows:
+        # Remove the full row
+        grid.pop(row)
+        # Insert an empty row at the top
+        grid.insert(0, [(0, BLACK) for _ in range(len(grid[0]))])
+    return len(full_rows)  # Return the number of cleared rows
