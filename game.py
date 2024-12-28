@@ -55,12 +55,22 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
+                # if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
+                #    start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
+                #     game_running = True
+                #     game_over = False
+                #     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)  # Reset grid
+                #     current_shape = random.choice(SHAPES)  # Reset shape
+                #     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
                 if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
-                   start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
+                start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
                     game_running = True
                     game_over = False
                     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)  # Reset grid
-                    current_shape = random.choice(SHAPES)  # Reset shape
+                    # Reset shape and its corresponding color
+                    current_shape_index = random.randint(0, len(SHAPES) - 1)
+                    current_shape = SHAPES[current_shape_index]
+                    current_color = SHAPE_COLORS[current_shape_index]
                     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
 
                 if pause_button_rect[0] <= mouse_x <= pause_button_rect[0] + pause_button_rect[2] and \
@@ -73,7 +83,10 @@ def main():
                     game_running = True
                     game_over = False
                     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
-                    current_shape = random.choice(SHAPES)
+                    # current_shape = random.choice(SHAPES)
+                    current_shape_index = random.randint(0, len(SHAPES) - 1)
+                    current_shape = SHAPES[current_shape_index]
+                    current_color = SHAPE_COLORS[current_shape_index]
                     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
 
         if game_running and not game_paused and not game_over:
