@@ -5,6 +5,8 @@ from grid import initialize_grid, draw_grid, place_shape_on_grid, clear_full_row
 from utils import rotate_shape, draw_button, check_collision, check_game_over, draw_block  # Import draw_block
 from time import sleep
 
+
+
 def main():
     global GRID_WIDTH, GRID_HEIGHT, BLOCK_SIZE
     pygame.init()
@@ -18,14 +20,9 @@ def main():
     # Initialize grid and game variables
     BLOCK_SIZE = min(screen.get_width() // GRID_WIDTH, screen.get_height() // GRID_HEIGHT)
     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
-    # current_shape = random.choice(SHAPES)
-    # current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
-    # Select a new shape and its corresponding color
-    sleep(0.5)
     current_shape_index = random.randint(0, len(SHAPES) - 1)
     current_shape = SHAPES[current_shape_index]
     current_color = SHAPE_COLORS[current_shape_index]
-
     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
 
     normal_tick_rate = 500
@@ -38,12 +35,22 @@ def main():
     rotation_delay = 200
     last_rotation_time = pygame.time.get_ticks()
 
+    # Scoring and level variables
+    score = 0
+    lines_cleared = 0
+    level = 0
+
     game_running = False
     game_paused = False
-    game_over = False  # New variable for game over state
+    game_over = False
 
     start_button_rect = (50, 10, 100, 50)
     pause_button_rect = (200, 10, 150, 50)
+
+    def calculate_score(lines, level):
+        """Calculate score based on lines cleared and level."""
+        line_scores = {1: 40, 2: 100, 3: 300, 4: 1200}
+        return line_scores.get(lines, 0) * (level + 1)
 
     while True:
         current_time = pygame.time.get_ticks()
@@ -55,39 +62,35 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
-                # if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
-                #    start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
-                #     game_running = True
-                #     game_over = False
-                #     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)  # Reset grid
-                #     current_shape = random.choice(SHAPES)  # Reset shape
-                #     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
                 if start_button_rect[0] <= mouse_x <= start_button_rect[0] + start_button_rect[2] and \
-                start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
+                   start_button_rect[1] <= mouse_y <= start_button_rect[1] + start_button_rect[3]:
                     game_running = True
                     game_over = False
-                    grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)  # Reset grid
-                    # Reset shape and its corresponding color
+                    grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
                     current_shape_index = random.randint(0, len(SHAPES) - 1)
                     current_shape = SHAPES[current_shape_index]
                     current_color = SHAPE_COLORS[current_shape_index]
                     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
+                    score = 0
+                    lines_cleared = 0
+                    level = 0
 
                 if pause_button_rect[0] <= mouse_x <= pause_button_rect[0] + pause_button_rect[2] and \
                    pause_button_rect[1] <= mouse_y <= pause_button_rect[1] + pause_button_rect[3] and game_running:
                     game_paused = not game_paused
 
-            # Restart game on key press when game is over
             if event.type == pygame.KEYDOWN and game_over:
                 if event.key == pygame.K_r:  # Restart the game
                     game_running = True
                     game_over = False
                     grid = initialize_grid(GRID_WIDTH, GRID_HEIGHT)
-                    # current_shape = random.choice(SHAPES)
                     current_shape_index = random.randint(0, len(SHAPES) - 1)
                     current_shape = SHAPES[current_shape_index]
                     current_color = SHAPE_COLORS[current_shape_index]
                     shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
+                    score = 0
+                    lines_cleared = 0
+                    level = 0
 
         if game_running and not game_paused and not game_over:
             keys = pygame.key.get_pressed()
@@ -112,19 +115,19 @@ def main():
                 else:
                     place_shape_on_grid(grid, current_shape, shape_x, shape_y, current_color)
                     cleared_rows = clear_full_rows(grid)
+                    if cleared_rows > 0:
+                        score += calculate_score(cleared_rows, level)
+                        lines_cleared += cleared_rows
+                        if lines_cleared // 10 > level:
+                            level += 1
                     if check_game_over(grid):
                         game_running = False
                         game_over = True
                     else:
-                        shape_y = 0
-                        shape_x = GRID_WIDTH // 2 - len(current_shape[0]) // 2
-                        # current_shape = random.choice(SHAPES)
-                        # current_color = random.choice([RED, CYAN, YELLOW, MAGENTA, GREEN, BLUE])
+                        shape_x, shape_y = GRID_WIDTH // 2 - len(current_shape[0]) // 2, 0
                         current_shape_index = random.randint(0, len(SHAPES) - 1)
                         current_shape = SHAPES[current_shape_index]
                         current_color = SHAPE_COLORS[current_shape_index]
-                        # print(current_shape_index,current_shape,current_color)
-                        # sleep(0.25)
                 last_tick = current_time
 
         screen.fill(BLACK)
@@ -139,6 +142,14 @@ def main():
                 for x, value in enumerate(row):
                     if value:
                         draw_block(screen, shape_x + x, shape_y + y, current_color, BLOCK_SIZE)
+
+            # Display score and level
+            score_text = font.render(f"Score: {score}", True, WHITE)
+            level_text = font.render(f"Level: {level}", True, WHITE)
+            lines_text = font.render(f"Lines: {lines_cleared}", True, WHITE)
+            screen.blit(score_text, (10, 50))
+            screen.blit(level_text, (10, 80))
+            screen.blit(lines_text, (10, 110))
 
         if game_over:
             game_over_text = game_over_font.render("Game Over!", True, RED)
