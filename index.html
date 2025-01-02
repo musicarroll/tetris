@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <style>
+        table {
+            margin: 0 auto;
+            border-spacing: 10px;
+        }
+        #gameCanvas {
+            border: 2px solid black;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <td rowspan="2">
+                <canvas id="gameCanvas"></canvas>
+            </td>
+            <td>
+                <div id="info">
+                    <p>Score: <span id="score">0</span></p>
+                    <p>Level: <span id="level">0</span></p>
+                    <p>Lines: <span id="lines">0</span></p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <!-- Start and Pause Buttons -->
+                <div class="controls">
+                    <button id="startButton">Start</button>
+                    <button id="pauseButton">Pause</button>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <!-- Directional Buttons -->
+                <div class="controls">
+                    <button id="rotateButton">Rotate</button>
+                    <button id="speedupButton">Speed Up</button>
+                    <button id="leftButton">Move Left</button>
+                    <button id="rightButton">Move Right</button>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <script src="tetris.js"></script>
+</body>
+</html>
